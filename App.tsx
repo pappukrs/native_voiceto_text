@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { NativeModules, NativeEventEmitter, Button, View, Text, PermissionsAndroid, Platform } from 'react-native';
+import TextToSpeechPlayer from './components/TextToSpeechPlayer';
 
 const { VoiceToTextModule } = NativeModules;
 const voiceModuleEmitter = new NativeEventEmitter(VoiceToTextModule);
 
 const App = () => {
   const [text, setText] = React.useState('');
+  const [showPlayer, setShowPlayer] = React.useState(false);
 
   useEffect(() => {
     const subscription = voiceModuleEmitter.addListener('onPartialResults', (data) => {
@@ -54,6 +56,10 @@ const App = () => {
       <Text>{text}</Text>
       <Button title="Start Listening" onPress={startListening} />
       <Button title="Stop" onPress={() => VoiceToTextModule.stopListening()} />
+      
+      <Button title="Show Player" onPress={() => setShowPlayer(true)} />
+
+      {showPlayer && <TextToSpeechPlayer   />}
     </View>
   );
 };
