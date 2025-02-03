@@ -2,6 +2,8 @@ import UIKit
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
+import VoiceToTextModuleDemo
+
 
 @main
 class AppDelegate: RCTAppDelegate {

@@ -1,17 +1,24 @@
-import React, { useEffect } from 'react';
-import { NativeModules, NativeEventEmitter, Button, View, Text, PermissionsAndroid, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { NativeModules, NativeEventEmitter, Button, View, Text, PermissionsAndroid, Platform, StyleSheet } from 'react-native';
+import AmplitudeWave from './components/AmplitudeWave';
 
 const { VoiceToTextModule } = NativeModules;
 const voiceModuleEmitter = new NativeEventEmitter(VoiceToTextModule);
 
 const App = () => {
-  const [text, setText] = React.useState('');
+  const [text, setText] = useState('');
+  const [isListening, setIsListening] = useState(false);
 
   useEffect(() => {
     const subscription = voiceModuleEmitter.addListener('onPartialResults', (data) => {
-      setText(data[0]); // Update UI with partial results
+      if (data && data[0]) {
+        setText(data[0]);
+      }
     });
-    return () => subscription.remove();
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   const requestPermission = async () => {
@@ -42,20 +49,44 @@ const App = () => {
         console.error('Permission denied');
         return;
       }
+      setIsListening(true);
       const result = await VoiceToTextModule.startListening();
-      setText(result); // Final result
+      setText(result);
     } catch (error) {
       console.error(error);
+      setIsListening(false);
     }
   };
 
+  const stopListening = () => {
+    VoiceToTextModule.stopListening();
+    setIsListening(false);
+  };
+
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>{text}</Text>
-      <Button title="Start Listening" onPress={startListening} />
-      <Button title="Stop" onPress={() => VoiceToTextModule.stopListening()} />
+    <View style={styles.container}>
+      {isListening && <AmplitudeWave />}
+      <Text style={styles.text}>{text || 'Start speaking...'}</Text>
+      <Button 
+        title={isListening ? "Stop Listening" : "Start Listening"} 
+        onPress={isListening ? stopListening : startListening} 
+      />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  text: {
+    fontSize: 18,
+    marginVertical: 20,
+    textAlign: 'center',
+  },
+});
 
 export default App;
